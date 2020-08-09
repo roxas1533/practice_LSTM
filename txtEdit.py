@@ -2,7 +2,7 @@ import sys
 import re
 import io
 
-path = 'henshin.txt'
+path = 'fusyuu.txt'
 bindata = open(path, "rb")
 lines = bindata.readlines()
 for line in lines:

@@ -53,23 +53,26 @@ def read_midi(path):
                         chunk['meta'].append(int.from_bytes(b, 'big'))
                         bs = midi.read(1)
                         chunk['meta'] += [b for b in bs]
-                        chunk['length'].append(3)
                         bs = midi.read(3)
                         chunk['body'] += [b for b in bs]
                     elif b == b'\x58':
                         chunk['meta'].append(int.from_bytes(b, 'big'))
                         bs = midi.read(1)
                         chunk['meta'] += [b for b in bs]
-                        chunk['length'].append(4)
                         bs = midi.read(4)
                         chunk['body'] += [b for b in bs]
                     elif b == b'\x2F':
                         chunk['meta'].append(int.from_bytes(b, 'big'))
                         bs = midi.read(1)
                         chunk['meta'] += [b for b in bs]
+                    elif b == b'\x59':
+                        chunk['meta'].append(int.from_bytes(b, 'big'))
+                        bs = midi.read(3)
+                        chunk['meta'] += [b for b in bs]
                     else:
                         print('不明なメタデータ')
-                        print(b.hex())
+                        print(f'データ:{b.hex()}')
+                        print(f'アドレス:{hex(midi.tell())}')
                 elif b in (b'\xF0', b'\xF8\7'):
                     chunk['status'].append(int.from_bytes(b, 'big'))
                     bs = b'\xFF'
@@ -113,7 +116,16 @@ def read_midi(path):
             track = {'header': [], 'chunks': []}
 
         print(midi.tell())
-        print(data['tracks'][1])
+        print(data)
+        print(len(data['tracks']))
+        for i in data['tracks']:
+            code = ''
+            for j in i['chunks']:
+                if len(j['meta']) == 0 and (format(j['status'][0], 'x')[0] in ('8', '9')):
+                    code = format(j['delta'][0], 'x') + '_' + format(j['status'][0], 'x') + '_' + ''.join(
+                        list(map(lambda X: format(X, 'x'), j['body'])))
+                    # file = open('code.txt', 'a', encoding='utf-8').write(code + ' ')
+        return data
 
 
-read_midi('minuet_bach.mid')
+read_midi(r'MIDI/FurElise_modern_piano.mid')

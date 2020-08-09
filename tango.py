@@ -1,7 +1,9 @@
 from __future__ import print_function
+
+from janome.tokenizer import Tokenizer
 from keras.callbacks import LambdaCallback
 from keras.models import Sequential
-from keras.layers import Dense, Activation
+from keras.layers import Dense, Activation, CuDNNLSTM
 from keras.layers import LSTM
 from keras.optimizers import RMSprop
 from keras.utils.data_utils import get_file
@@ -19,18 +21,28 @@ config = tf.compat.v1.ConfigProto(gpu_options=
 config.gpu_options.allow_growth = True
 session = tf.compat.v1.Session(config=config)
 tf.compat.v1.keras.backend.set_session(session)
-path = './data_rojinto_umi.txt'
+path = './code.txt'
 with io.open(path, encoding='utf-8') as f:
     text = f.read().lower()
-print('corpus length:', len(text))
 
-chars = sorted(list(set(text)))
-print('total chars:', len(chars))
-char_indices = dict((c, i) for i, c in enumerate(chars))
-indices_char = dict((i, c) for i, c in enumerate(chars))
+# text = Tokenizer().tokenize(text, wakati=True)  # 分かち書きする
+text = text.split(' ')[:-1]
+
+chars = text
+count = 0
+char_indices = {}  # 辞書初期化
+indices_char = {}  # 逆引き辞書初期化
+
+for word in chars:
+    if not word in char_indices:  # 未登録なら
+        char_indices[word] = count  # 登録する
+        count += 1
+        print(count, word)  # 登録した単語を表示
+# 逆引き辞書を辞書から作成する
+indices_char = dict([(value, key) for (key, value) in char_indices.items()])
 
 # cut the text in semi-redundant sequences of maxlen characters
-maxlen = 8
+maxlen = 3
 step = 1
 sentences = []
 next_chars = []
@@ -76,25 +88,28 @@ def on_epoch_end(epoch, logs):
 
         generated = ''
         sentence = text[start_index: start_index + maxlen]
-        generated += sentence
-        print('----- Generating with seed: "' + sentence + '"')
-        sys.stdout.write(generated)
+        generated += " ".join(sentence)
+        print(sentence)
+        print('----- Generating with seed: "' + " ".join(sentence) + '"')
 
-        for i in range(400):
-            x_pred = np.zeros((1, maxlen, len(chars)))
-            for t, char in enumerate(sentence):
-                x_pred[0, t, char_indices[char]] = 1.
+        if epoch in (1, 58):
+            for i in range(400):
+                x_pred = np.zeros((1, maxlen, len(chars)))
+                for t, char in enumerate(sentence):
+                    x_pred[0, t, char_indices[char]] = 1.
 
-            preds = model.predict(x_pred, verbose=0)[0]
-            next_index = sample(preds, diversity)
-            next_char = indices_char[next_index]
+                preds = model.predict(x_pred, verbose=0)[0]
+                next_index = sample(preds, diversity)
+                next_char = indices_char[next_index]
 
-            generated += next_char
-            sentence = sentence[1:] + next_char
-
-            sys.stdout.write(next_char)
-            sys.stdout.flush()
-        print()
+                generated += next_char
+                sentence = sentence[1:]
+                # sentence はリストなので append で結合する
+                sentence.append(next_char)
+                file = open(f'AI_MUSIC_{epoch}.txt', 'a', encoding='utf-8').write(next_char + ' ')  # UTF-8に変換
+                sys.stdout.write(next_char + ' ')
+                sys.stdout.flush()
+            print()
 
 
 print_callback = LambdaCallback(on_epoch_end=on_epoch_end)
