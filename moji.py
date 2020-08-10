@@ -19,7 +19,7 @@ config = tf.compat.v1.ConfigProto(gpu_options=
 config.gpu_options.allow_growth = True
 session = tf.compat.v1.Session(config=config)
 tf.compat.v1.keras.backend.set_session(session)
-path = './data_rojinto_umi.txt'
+path = 'tweet.txt'
 with io.open(path, encoding='utf-8') as f:
     text = f.read().lower()
 print('corpus length:', len(text))

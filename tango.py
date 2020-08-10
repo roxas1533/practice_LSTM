@@ -42,7 +42,7 @@ for word in chars:
 indices_char = dict([(value, key) for (key, value) in char_indices.items()])
 
 # cut the text in semi-redundant sequences of maxlen characters
-maxlen = 3
+maxlen = 4
 step = 1
 sentences = []
 next_chars = []
