@@ -59,7 +59,10 @@ for i, sentence in enumerate(sentences):
     y[i, char_indices[next_chars[i]]] = 1
 
 model = Sequential()
-model.add(LSTM(128, input_shape=(maxlen, len(chars))))
+model.add(LSTM(128, return_sequences=True, input_shape=(maxlen, len(chars))))
+model.add(LSTM(128, return_sequences=True))
+model.add(LSTM(128, return_sequences=True))
+model.add(LSTM(128))
 model.add(Dense(len(chars)))
 model.add(Activation('softmax'))
 
@@ -93,7 +96,7 @@ def on_epoch_end(epoch, logs):
         print('----- Generating with seed: "' + " ".join(sentence) + '"')
 
         if epoch in (1, 58):
-            for i in range(400):
+            for i in range(800):
                 x_pred = np.zeros((1, maxlen, len(chars)))
                 for t, char in enumerate(sentence):
                     x_pred[0, t, char_indices[char]] = 1.

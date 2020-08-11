@@ -138,10 +138,11 @@ def read_midi(path):
         for i in data['tracks']:
             code = ''
             for j in i['chunks']:
-                if len(j['meta']) == 0 and (format(j['status'][0], 'x')[0] in ('8', '9')):
-                    code = ''.join(list(map(lambda X: format(X, '02x'), j['delta']))) + '_' + format(j['status'][0],
-                                                                                                     'x') + '_' + ''.join(
-                        list(map(lambda X: format(X, '02x'), j['body'])))
+                if len(j['meta']) == 0:
+                    if format(j['status'][0], 'x')[0] in ('8', '9', 'C', 'B'):
+                        code = ''.join(list(map(lambda X: format(X, '02x'), j['delta']))) + '_' + format(j['status'][0],
+                                                                                                         'x') + '_' + ''.join(
+                            list(map(lambda X: format(X, '02x'), j['body'])))
                     file = open('code.txt', 'a', encoding='utf-8').write(code + ' ')
         return data
 
